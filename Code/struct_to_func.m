@@ -12,15 +12,19 @@ Date: 11/12/2015
 
 %Adjacency Matrix i.e, Structural Connectivity of size NxN
 W_s = dlmread('UCLA_Autism_TD128B_DTI_connectmat.txt');
-D_s = diag(sum(W_s));                                       %D matrix
+D_s = diag(sum(W_s, 1));                                       %D matrix
+
+%kk = (D_s^(-0.5))*W_s*(D_s^(-0.5));
+%LL = D_s - W_s;
 
 %Functional Connectivity of size NxN where N = #ROI
 FC = dlmread('UCLA_Autism_TD128_rsfMRI_connectmat.txt');    %Ground Truth of FC
 FC(isinf(FC)) = 0;                                          %Setting Diag as 0
 Fc_norm = (FC - min(FC(:)))/(max(FC(:)) - min(FC(:)));      %Normalizing in the range [0 1]
 
-%Calculating Laplacian
-L_sym = diag(ones(size(W_s,1),1)) - D_s^(-0.5)*W_s*D_s^(-0.5);
+%Calculating Laplacian sym
+%L_sym = (D_s^(-0.5))*LL*(D_s^(-0.5));
+L_sym = eye(size(W_s,1)) - (inv(D_s^(0.5)))*W_s*(inv(D_s^(0.5)));
 
 %Eig decomp. of lap.
 [vec, val] = eig(L_sym);
@@ -45,10 +49,10 @@ for i = 1:50
     mean_calc = mean2(H_s2{i});
     mean_ground = mean2(Fc_norm);
 
-    H_s2{i} = H_s2{i} - mean_calc;
+    H = H_s2{i} - mean_calc;
     Fc_norm = Fc_norm - mean_ground;
-    temp = H_s2{i}.*Fc_norm;
-    H_sq = H_s2{i}.*H_s2{i};
+    temp = H.*Fc_norm;
+    H_sq = H.*H;
     Fc_sq = Fc_norm.*Fc_norm;
 
     pear_corr(i) = sum(temp(:))/(sqrt(sum(H_sq(:)))*sqrt(sum(Fc_sq(:))));
