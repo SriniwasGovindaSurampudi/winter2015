@@ -1,0 +1,389 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>struct_to_func</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-12-14"><meta name="DC.source" content="struct_to_func.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">%{
+</span><span class="comment">Estimating Functional Connectivity from Structural Connectivity
+</span><span class="comment">Data: Autism TD(Typically Developing i.e, Healthy samples)
+</span><span class="comment">Age Group: 4 to 20.
+</span><span class="comment">ROI: 264
+</span><span class="comment">source: http://umcd.humanconnectomeproject.org
+</span><span class="comment">Authors: Abbhinav Venkat, Govinda Sriniwas Surampudi
+</span><span class="comment">Creation Date: 11/12/2015
+</span><span class="comment">%}
+</span>
+<span class="comment">%***************************************************************************************************%</span>
+<span class="comment">%Reading data</span>
+
+<span class="comment">%Adjacency Matrix i.e, Structural Connectivity of size NxN</span>
+W_s = dlmread(<span class="string">'UCLA_Autism_TD128B_DTI_connectmat.txt'</span>);
+D_s = diag(sum(W_s, 2));                                    <span class="comment">%Diagonal Degree matrix</span>
+
+<span class="comment">%Functional Connectivity of size NxN where N = #ROI</span>
+FC = dlmread(<span class="string">'UCLA_Autism_TD128_rsfMRI_connectmat.txt'</span>);    <span class="comment">%Ground Truth of FC</span>
+FC(isinf(FC)) = 0;                                          <span class="comment">%Setting Diag as 0</span>
+Fc_norm = (FC - min(FC(:)))/(max(FC(:)) - min(FC(:)));      <span class="comment">%Normalizing in the range [0 1]</span>
+
+<span class="comment">%***************************************************************************************************%</span>
+<span class="comment">%Calculating normalized weight matrix</span>
+
+norm_W = ((D_s^(-0.5)))*W_s*((D_s^(-0.5)));
+norm_W = round(norm_W, 10);
+symm_check = norm_W - norm_W';
+assert(isempty(find(symm_check~=0, 1)));                    <span class="comment">%To check for symmetry of norm_W</span>
+
+<span class="comment">%Calculating normalized symmetrix Laplacian</span>
+L_sym = eye(size(W_s,1)) - norm_W;
+symm_check = L_sym - L_sym';
+assert(isempty(find(symm_check~=0, 1)));                    <span class="comment">%To check for symmetry of L_sym</span>
+
+<span class="comment">%{
+</span><span class="comment">symm_check = L_sym - L_sym';
+</span><span class="comment">We notice that symm_check(i, j) = -symm_check(i, j)
+</span><span class="comment">The values are of the order of 10^-17 which is very small.
+</span><span class="comment">Therefore, L_sym isn't symmetric.
+</span><span class="comment">This is because of a matlab round off error while calculating inverse
+</span><span class="comment">So, we round it off to 10 decimal digits.
+</span><span class="comment">%}
+</span>
+<span class="comment">%***************************************************************************************************%</span>
+<span class="comment">%Eig decomp. of lap.</span>
+[vec, val] = eig(L_sym);
+
+<span class="comment">%Initializing</span>
+maxi = -1;
+t = -1;
+H_s2 = cell(50, 1);
+pear_corr = size(50, 1);
+
+<span class="comment">%{
+</span><span class="comment">exp(val*t) : Heat kernal
+</span><span class="comment">Emperically found that Corr saturates as t tends to 50.
+</span><span class="comment">Running for different t from 1 to 50.
+</span><span class="comment">%}
+</span>
+<span class="keyword">for</span> i = 1:50
+    Diag_s_exp = diag(exp(-sum(val,1)*i));
+    H_s = vec * Diag_s_exp * vec';                          <span class="comment">%Heat Kernal</span>
+
+    <span class="comment">%Normalizing in the range [0 1]</span>
+    H_s2{i} = (H_s - min(H_s(:)))/(max(H_s(:)) - min(H_s(:))); <span class="comment">%Normalized Heat Kernal</span>
+
+<span class="comment">    %{
+</span><span class="comment">    Pearson correlation between H_s2 and Fc_norm
+</span><span class="comment">    For drawing graph Corr(FC_ground_truth, FC_calculated) v/s Bt
+</span><span class="comment">    %}
+</span>
+    mean_calc = mean2(H_s2{i});
+    mean_ground = mean2(Fc_norm);
+
+    H = H_s2{i} - mean_calc;
+    Fc_norm = Fc_norm - mean_ground;
+    temp = H.*Fc_norm;
+    H_sq = H.*H;
+    Fc_sq = Fc_norm.*Fc_norm;
+
+    pear_corr(i) = sum(temp(:))/(sqrt(sum(H_sq(:)))*sqrt(sum(Fc_sq(:))));
+    fprintf(<span class="string">'Per_corr for t=%d'</span>, i);
+    disp(pear_corr(i));
+
+    <span class="comment">%Find Max Pearson correlation coefficient and save best t</span>
+    <span class="keyword">if</span> pear_corr(i)&gt;=maxi
+        maxi = pear_corr(i);
+        t = i;
+    <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">%***************************************************************************************************%</span>
+<span class="comment">%Results</span>
+
+fprintf(<span class="string">'******----------------------------------******\n'</span>);
+fprintf(<span class="string">'Max Pearson correlation = %d'</span>, maxi);
+fprintf(<span class="string">'\nt = %d\n'</span>, t);
+
+figure;
+subplot(1, 2, 1); imagesc(Fc_norm); title(<span class="string">'Ground Truth of Functional Connectivity'</span>);
+subplot(1, 2, 2); imagesc(H_s2{t}); title(<span class="string">'Obtained Functional Connectivity'</span>);
+figure; plot(pear_corr);  title(<span class="string">'Corr(FC ground truth, FC calculated) v/s Bt'</span>);
+xlabel(<span class="string">'Bt'</span>); ylabel(<span class="string">'Correlation of FC calculated with empirical FC'</span>);
+
+<span class="comment">%***************************************************************************************************%</span>
+</pre><pre class="codeoutput">Per_corr for t=1    0.0584
+
+Per_corr for t=2    0.1266
+
+Per_corr for t=3    0.1753
+
+Per_corr for t=4    0.2055
+
+Per_corr for t=5    0.2250
+
+Per_corr for t=6    0.2384
+
+Per_corr for t=7    0.2479
+
+Per_corr for t=8    0.2547
+
+Per_corr for t=9    0.2593
+
+Per_corr for t=10    0.2623
+
+Per_corr for t=11    0.2639
+
+Per_corr for t=12    0.2644
+
+Per_corr for t=13    0.2639
+
+Per_corr for t=14    0.2625
+
+Per_corr for t=15    0.2605
+
+Per_corr for t=16    0.2578
+
+Per_corr for t=17    0.2546
+
+Per_corr for t=18    0.2510
+
+Per_corr for t=19    0.2469
+
+Per_corr for t=20    0.2425
+
+Per_corr for t=21    0.2377
+
+Per_corr for t=22    0.2328
+
+Per_corr for t=23    0.2275
+
+Per_corr for t=24    0.2221
+
+Per_corr for t=25    0.2165
+
+Per_corr for t=26    0.2109
+
+Per_corr for t=27    0.2051
+
+Per_corr for t=28    0.1992
+
+Per_corr for t=29    0.1934
+
+Per_corr for t=30    0.1875
+
+Per_corr for t=31    0.1816
+
+Per_corr for t=32    0.1758
+
+Per_corr for t=33    0.1700
+
+Per_corr for t=34    0.1643
+
+Per_corr for t=35    0.1588
+
+Per_corr for t=36    0.1533
+
+Per_corr for t=37    0.1479
+
+Per_corr for t=38    0.1427
+
+Per_corr for t=39    0.1377
+
+Per_corr for t=40    0.1328
+
+Per_corr for t=41    0.1280
+
+Per_corr for t=42    0.1234
+
+Per_corr for t=43    0.1190
+
+Per_corr for t=44    0.1147
+
+Per_corr for t=45    0.1106
+
+Per_corr for t=46    0.1067
+
+Per_corr for t=47    0.1029
+
+Per_corr for t=48    0.0993
+
+Per_corr for t=49    0.0959
+
+Per_corr for t=50    0.0925
+
+******----------------------------------******
+Max Pearson correlation = 2.643608e-01
+t = 12
+</pre><img vspace="5" hspace="5" src="struct_to_func_01.png" alt=""> <img vspace="5" hspace="5" src="struct_to_func_02.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%{
+Estimating Functional Connectivity from Structural Connectivity
+Data: Autism TD(Typically Developing i.e, Healthy samples)
+Age Group: 4 to 20.
+ROI: 264
+source: http://umcd.humanconnectomeproject.org
+Authors: Abbhinav Venkat, Govinda Sriniwas Surampudi
+Creation Date: 11/12/2015
+%}
+
+%***************************************************************************************************%
+%Reading data
+
+%Adjacency Matrix i.e, Structural Connectivity of size NxN
+W_s = dlmread('UCLA_Autism_TD128B_DTI_connectmat.txt');
+D_s = diag(sum(W_s, 2));                                    %Diagonal Degree matrix
+
+%Functional Connectivity of size NxN where N = #ROI
+FC = dlmread('UCLA_Autism_TD128_rsfMRI_connectmat.txt');    %Ground Truth of FC
+FC(isinf(FC)) = 0;                                          %Setting Diag as 0
+Fc_norm = (FC - min(FC(:)))/(max(FC(:)) - min(FC(:)));      %Normalizing in the range [0 1]
+
+%***************************************************************************************************%
+%Calculating normalized weight matrix
+
+norm_W = ((D_s^(-0.5)))*W_s*((D_s^(-0.5)));
+norm_W = round(norm_W, 10);
+symm_check = norm_W - norm_W';
+assert(isempty(find(symm_check~=0, 1)));                    %To check for symmetry of norm_W
+
+%Calculating normalized symmetrix Laplacian
+L_sym = eye(size(W_s,1)) - norm_W;
+symm_check = L_sym - L_sym';
+assert(isempty(find(symm_check~=0, 1)));                    %To check for symmetry of L_sym
+
+%{
+symm_check = L_sym - L_sym';
+We notice that symm_check(i, j) = -symm_check(i, j)
+The values are of the order of 10^-17 which is very small. 
+Therefore, L_sym isn't symmetric. 
+This is because of a matlab round off error while calculating inverse
+So, we round it off to 10 decimal digits.
+%}
+
+%***************************************************************************************************%
+%Eig decomp. of lap.
+[vec, val] = eig(L_sym);
+
+%Initializing
+maxi = -1;
+t = -1;
+H_s2 = cell(50, 1);
+pear_corr = size(50, 1);
+
+%{
+exp(val*t) : Heat kernal
+Emperically found that Corr saturates as t tends to 50. 
+Running for different t from 1 to 50.
+%}
+
+for i = 1:50
+    Diag_s_exp = diag(exp(-sum(val,1)*i));
+    H_s = vec * Diag_s_exp * vec';                          %Heat Kernal
+
+    %Normalizing in the range [0 1]
+    H_s2{i} = (H_s - min(H_s(:)))/(max(H_s(:)) - min(H_s(:))); %Normalized Heat Kernal
+
+    %{
+    Pearson correlation between H_s2 and Fc_norm
+    For drawing graph Corr(FC_ground_truth, FC_calculated) v/s Bt
+    %}
+
+    mean_calc = mean2(H_s2{i});
+    mean_ground = mean2(Fc_norm);
+
+    H = H_s2{i} - mean_calc;
+    Fc_norm = Fc_norm - mean_ground;
+    temp = H.*Fc_norm;
+    H_sq = H.*H;
+    Fc_sq = Fc_norm.*Fc_norm;
+
+    pear_corr(i) = sum(temp(:))/(sqrt(sum(H_sq(:)))*sqrt(sum(Fc_sq(:))));
+    fprintf('Per_corr for t=%d', i);
+    disp(pear_corr(i));
+    
+    %Find Max Pearson correlation coefficient and save best t
+    if pear_corr(i)>=maxi
+        maxi = pear_corr(i);
+        t = i;
+    end
+    
+end
+
+%***************************************************************************************************%
+%Results
+
+fprintf('******REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH******\n');
+fprintf('Max Pearson correlation = %d', maxi);
+fprintf('\nt = %d\n', t);
+
+figure; 
+subplot(1, 2, 1); imagesc(Fc_norm); title('Ground Truth of Functional Connectivity');
+subplot(1, 2, 2); imagesc(H_s2{t}); title('Obtained Functional Connectivity');
+figure; plot(pear_corr);  title('Corr(FC ground truth, FC calculated) v/s Bt'); 
+xlabel('Bt'); ylabel('Correlation of FC calculated with empirical FC');
+
+%***************************************************************************************************%
+##### SOURCE END #####
+--></body></html>

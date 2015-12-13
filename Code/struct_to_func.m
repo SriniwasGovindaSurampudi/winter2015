@@ -26,12 +26,12 @@ Fc_norm = (FC - min(FC(:)))/(max(FC(:)) - min(FC(:)));      %Normalizing in the 
 norm_W = ((D_s^(-0.5)))*W_s*((D_s^(-0.5)));
 norm_W = round(norm_W, 10);
 symm_check = norm_W - norm_W';
-assert(isempty(find(symm_check~=0, 1)));                       %To check for symmetry of norm_W
+assert(isempty(find(symm_check~=0, 1)));                    %To check for symmetry of norm_W
 
 %Calculating normalized symmetrix Laplacian
 L_sym = eye(size(W_s,1)) - norm_W;
 symm_check = L_sym - L_sym';
-assert(isempty(find(symm_check~=0, 1)));                       %To check for symmetry of L_sym
+assert(isempty(find(symm_check~=0, 1)));                    %To check for symmetry of L_sym
 
 %{
 symm_check = L_sym - L_sym';
@@ -60,7 +60,7 @@ Running for different t from 1 to 50.
 
 for i = 1:50
     Diag_s_exp = diag(exp(-sum(val,1)*i));
-    H_s = vec * Diag_s_exp * vec';                             %Heat Kernal
+    H_s = vec * Diag_s_exp * vec';                          %Heat Kernal
 
     %Normalizing in the range [0 1]
     H_s2{i} = (H_s - min(H_s(:)))/(max(H_s(:)) - min(H_s(:))); %Normalized Heat Kernal
@@ -98,8 +98,9 @@ fprintf('******----------------------------------******\n');
 fprintf('Max Pearson correlation = %d', maxi);
 fprintf('\nt = %d\n', t);
 
-figure; imagesc(Fc_norm); title('Ground Truth of Functional Connectivity');
-figure; imagesc(H_s2{t}); title('Obtained Functional Connectivity');
+figure; 
+subplot(1, 2, 1); imagesc(Fc_norm); title('Ground Truth of Functional Connectivity');
+subplot(1, 2, 2); imagesc(H_s2{t}); title('Obtained Functional Connectivity');
 figure; plot(pear_corr);  title('Corr(FC ground truth, FC calculated) v/s Bt'); 
 xlabel('Bt'); ylabel('Correlation of FC calculated with empirical FC');
 

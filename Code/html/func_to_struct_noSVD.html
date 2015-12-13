@@ -1,0 +1,211 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>func_to_struct_noSVD</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-12-14"><meta name="DC.source" content="func_to_struct_noSVD.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">%{
+</span><span class="comment">Model Inversion:
+</span><span class="comment">Estimating Structural Connectivity given functional connectivity and degree
+</span><span class="comment">of structural graph
+</span><span class="comment">WITHOUT SVD; Use the Obtained Functional Conn. directly with best t
+</span><span class="comment">
+</span><span class="comment">Data: Autism TD(Typically Developing i.e, Healthy samples)
+</span><span class="comment">Age Group: 4 to 20.
+</span><span class="comment">ROI: 264
+</span><span class="comment">source: http://umcd.humanconnectomeproject.org
+</span><span class="comment">Authors: Abbhinav Venkat, Govinda Sriniwas Surampudi
+</span><span class="comment">Creation Date: 14/12/2015
+</span><span class="comment">
+</span><span class="comment">First run struct_to_func.m
+</span><span class="comment">Then, run this file.
+</span><span class="comment">%}
+</span>
+<span class="comment">%*************************************************************************%</span>
+<span class="comment">%Using the Obtained Functional Conn. directly with best t</span>
+
+Cf = H_s2{t};
+Cf = round(Cf, 10);
+symm_check = Cf - Cf';
+assert(isempty(find(symm_check~=0, 1)));    <span class="comment">%To check for symmetry of Cf</span>
+
+[nvec, nval] = eig(Cf);
+temp_val = sum(nval, 2);
+
+<span class="comment">%Replacing all -ve and 0 eigen values with a very small number</span>
+[m, n] = find(temp_val &lt;= 0);
+temp_val(m) = 1*10^(-5);    <span class="comment">%Only temporary fix</span>
+
+gamma = -log(temp_val)/t;
+
+<span class="comment">%Re-computing L</span>
+L = nvec*diag(gamma)*nvec';
+
+<span class="comment">%Finding Structural Connectivity</span>
+C = (D_s^0.5)*(diag(ones(size(W_s,1),1)) - L)*(D_s^0.5);
+C = round(C, 10);
+
+<span class="comment">%*************************************************************************%</span>
+<span class="comment">%Correlation between emerical and estimated structure - Pearson Coeff.</span>
+
+mean_calc = mean2(C);
+
+W_s = round(W_s, 10);
+mean_ground = mean2(W_s);
+
+C1 = C - mean_calc;
+W1 = W_s - mean_ground;
+
+temp = C1.*W1;
+C1_sq = C1.*C1;
+W1_sq = W1.*W1;
+
+pear_corr_2 = sum(temp(:))/(sqrt(sum(C1_sq(:)))*sqrt(sum(W1_sq(:))));
+disp(<span class="string">'********** Model Inversion : Structural from Functional ***********'</span>);
+disp(<span class="string">'Without SVD'</span>);
+disp(<span class="string">'Correlation'</span>);
+disp(pear_corr_2);
+
+figure;
+subplot(1, 2, 1); imagesc(W_s); title(<span class="string">'Ground Truth of Structural Connectivity'</span>);
+subplot(1, 2, 2); imagesc(C); title(<span class="string">'Obtained Structural Connectivity'</span>);
+
+<span class="comment">%*************************************************************************%</span>
+</pre><pre class="codeoutput">********** Model Inversion : Structural from Functional ***********
+Without SVD
+Correlation
+    0.8228
+
+</pre><img vspace="5" hspace="5" src="func_to_struct_noSVD_01.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%{
+Model Inversion: 
+Estimating Structural Connectivity given functional connectivity and degree
+of structural graph
+WITHOUT SVD; Use the Obtained Functional Conn. directly with best t
+
+Data: Autism TD(Typically Developing i.e, Healthy samples)
+Age Group: 4 to 20.
+ROI: 264
+source: http://umcd.humanconnectomeproject.org
+Authors: Abbhinav Venkat, Govinda Sriniwas Surampudi
+Creation Date: 14/12/2015
+
+First run struct_to_func.m
+Then, run this file. 
+%}
+
+%*************************************************************************%
+%Using the Obtained Functional Conn. directly with best t
+
+Cf = H_s2{t};
+Cf = round(Cf, 10);
+symm_check = Cf - Cf';
+assert(isempty(find(symm_check~=0, 1)));    %To check for symmetry of Cf
+
+[nvec, nval] = eig(Cf);
+temp_val = sum(nval, 2);
+
+%Replacing all -ve and 0 eigen values with a very small number
+[m, n] = find(temp_val <= 0);
+temp_val(m) = 1*10^(-5);    %Only temporary fix
+
+gamma = -log(temp_val)/t;                
+
+%Re-computing L
+L = nvec*diag(gamma)*nvec';
+
+%Finding Structural Connectivity
+C = (D_s^0.5)*(diag(ones(size(W_s,1),1)) - L)*(D_s^0.5);
+C = round(C, 10);
+
+%*************************************************************************%
+%Correlation between emerical and estimated structure - Pearson Coeff. 
+
+mean_calc = mean2(C);
+
+W_s = round(W_s, 10);
+mean_ground = mean2(W_s);
+
+C1 = C - mean_calc;
+W1 = W_s - mean_ground;
+
+temp = C1.*W1;
+C1_sq = C1.*C1;
+W1_sq = W1.*W1;
+
+pear_corr_2 = sum(temp(:))/(sqrt(sum(C1_sq(:)))*sqrt(sum(W1_sq(:))));
+disp('********** Model Inversion : Structural from Functional ***********');
+disp('Without SVD');
+disp('Correlation');
+disp(pear_corr_2);
+
+figure;
+subplot(1, 2, 1); imagesc(W_s); title('Ground Truth of Structural Connectivity');
+subplot(1, 2, 2); imagesc(C); title('Obtained Structural Connectivity');
+
+%*************************************************************************%
+##### SOURCE END #####
+--></body></html>
