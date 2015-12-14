@@ -10,6 +10,9 @@ ROI: 264
 source: http://umcd.humanconnectomeproject.org
 Authors: Abbhinav Venkat, Govinda Sriniwas Surampudi
 Creation Date: 12/12/2015
+
+First run struct_to_func.m
+Then, run this file.
 %}
 
 %*************************************************************************%
