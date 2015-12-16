@@ -19,6 +19,7 @@ Then, run this file.
 %Using the Obtained Functional Conn. directly with best t
 
 Cf = H_s2{t};
+%Cf = FC;
 Cf = round(Cf, 10);
 symm_check = Cf - Cf';
 assert(isempty(find(symm_check~=0, 1)));    %To check for symmetry of Cf
