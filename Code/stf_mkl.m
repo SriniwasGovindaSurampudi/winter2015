@@ -1,3 +1,15 @@
+%{
+Estimating Functional Connectivity from Structural Connectivity
+Using Multiple Kernal Learning
+
+Data: Autism TD(Typically Developing i.e, Healthy samples)
+Age Group: 4 to 20.
+ROI: 264
+source: http://umcd.humanconnectomeproject.org
+Authors: Abbhinav Venkat, Govinda Sriniwas Surampudi
+Creation Date: 16/12/2015
+%}
+
 %***************************************************************************************************%
 %Reading data
 
@@ -70,6 +82,8 @@ for i = 1:size(val, 1)
     Cf_final(:, i) = Cf{i}; %Combining with B = 1 (Linear coeff)
 end
 
+plot(scale);
+
 %***************************************************************************************************%
 %Learning B
 
@@ -114,3 +128,5 @@ end
 
 pear_corr_calc = abs(pear_corr_3); %removing negative relationships
 final_corr = mean(pear_corr_calc);
+
+%***************************************************************************************************%
