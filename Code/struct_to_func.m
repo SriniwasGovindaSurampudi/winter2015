@@ -58,7 +58,7 @@ Emperically found that Corr saturates as t tends to 50.
 Running for different t from 1 to 50.
 %}
 
-for i = 1:50
+for i = 1:100
     Diag_s_exp = diag(exp(-sum(val,1)*i));
     H_s = vec * Diag_s_exp * vec';                          %Heat Kernal
 
@@ -68,8 +68,8 @@ for i = 1:50
     %{
     Pearson correlation between H_s2 and Fc_norm
     For drawing graph Corr(FC_ground_truth, FC_calculated) v/s Bt
-    %}
-
+    2D vector as 1D
+    
     mean_calc = mean2(H_s2{i});
     mean_ground = mean2(Fc_norm);
 
@@ -80,6 +80,30 @@ for i = 1:50
     Fc_sq = Fc_norm.*Fc_norm;
 
     pear_corr(i) = sum(temp(:))/(sqrt(sum(H_sq(:)))*sqrt(sum(Fc_sq(:))));
+    %}
+
+    %Pearson correlation b/w corresponding rows and then taking mean
+    Heat = H_s2{i};
+    pear_corr_3 = zeros(size(H_s2, 1), 1);
+
+    for cntr = 1:size(H_s2, 1)
+       obs = Heat(cntr, :);
+       giv = Fc_norm(cntr, :);
+
+       obs = obs - mean(obs);
+       giv = giv - mean(giv);
+
+       temp = obs.*giv;
+       obs_sq = obs.*obs;
+       giv_sq = giv.*giv;
+
+       pear_corr_3(cntr) = sum(temp(:))/(sqrt(sum(obs_sq(:)))*sqrt(sum(giv_sq(:))));
+    end
+
+    pear_corr_calc = abs(pear_corr_3); %removing negative relationships
+
+    pear_corr(i) = mean(pear_corr_calc);   
+   
     fprintf('Per_corr for t=%d', i);
     disp(pear_corr(i));
     

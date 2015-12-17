@@ -41,8 +41,9 @@ C = (D_s^0.5)*(diag(ones(size(W_s,1),1)) - L)*(D_s^0.5);
 C = round(C, 10);
 
 %*************************************************************************%
-%Correlation between emerical and estimated structure - Pearson Coeff. 
-
+%{
+Correlation between emerical and estimated structure - Pearson Coeff. 
+2D to 1D
 mean_calc = mean2(C);
 
 W_s = round(W_s, 10);
@@ -56,6 +57,30 @@ C1_sq = C1.*C1;
 W1_sq = W1.*W1;
 
 pear_corr_2 = sum(temp(:))/(sqrt(sum(C1_sq(:)))*sqrt(sum(W1_sq(:))));
+%}
+
+%Pearson correlation b/w corresponding rows and then taking mean
+W_s = round(W_s, 10);
+pear_corr_3 = zeros(size(C, 1), 1);
+
+for cntr = 1:size(C, 1)
+   obs = C(cntr, :);
+   giv = W_s(cntr, :);
+   
+   obs = obs - mean(obs);
+   giv = giv - mean(giv);
+   
+   temp = obs.*giv;
+   obs_sq = obs.*obs;
+   giv_sq = giv.*giv;
+   
+   pear_corr_3(cntr) = sum(temp(:))/(sqrt(sum(obs_sq(:)))*sqrt(sum(giv_sq(:))));
+end
+
+pear_corr_calc = abs(pear_corr_3); %removing negative relationships
+
+pear_corr_2 = mean(pear_corr_calc);
+
 disp('********** Model Inversion : Structural from Functional ***********');
 disp('Without SVD');
 disp('Correlation');
